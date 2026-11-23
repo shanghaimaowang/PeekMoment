@@ -1,0 +1,15 @@
+# 依赖（npm install 还原）
+node_modules/
+
+# 构建产物（npm run build 生成）
+dist/
+
+# 日志
+*.log
+
+# 本地覆盖配置
+*.local
+
+# 编辑器：只共享插件推荐
+**/.vscode/*
+!**/.vscode/extensions.json
