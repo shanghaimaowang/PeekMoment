@@ -11,26 +11,8 @@
       </view>
       <textarea v-model="body" class="body-input" placeholder="有什么想说的？" maxlength="1000" :disabled="busy"/>
     </view>
-    <view class="section-head">
-      <text class="section-title">图片或视频</text>
-      <text class="muted">最多 9 张图或 1 段视频</text>
-    </view>
-    <view v-if="media.length" class="attachments">
-      <view v-for="(m,i) in media" :key="m.src" class="attachment">
-        <pm-media :item="m"/>
-        <button class="remove-media" aria-label="移除媒体" :disabled="busy" @click="drop(i)">×</button>
-      </view>
-    </view>
-    <view class="pick-actions">
-      <button v-if="canImage" class="pick-button" :disabled="busy" @click="pickImages">
-        <image class="icon" src="/static/image-ink.png"/>
-        选照片
-      </button>
-      <button v-if="!media.length" class="pick-button" :disabled="busy" @click="pickVideo">
-        <image class="icon" src="/static/video-ink.png"/>
-        选视频
-      </button>
-    </view>
+    <pm-attachment-picker v-if="!remote || remoteMedia" :items="media" :disabled="busy" @add="addMedia" @remove="drop" @choosing="choosing=$event"/>
+    <text v-else class="muted">联调广场本周支持文字和标签发布。</text>
     <view class="section-head">
       <text class="section-title">标签</text>
       <text class="muted">{{ tags.length }}/5</text>
@@ -42,7 +24,7 @@
       <input v-model="custom" placeholder="自定义标签" maxlength="12" :disabled="busy" @confirm="addTag"/>
       <button class="link" :disabled="busy" @click="addTag">添加</button>
     </view>
-    <button class="primary wide submit" :disabled="busy" @click="submit">{{ busy?'正在保存…':(id?'保存修改':'发布') }}</button>
+    <button class="primary wide submit" :disabled="busy || choosing" @click="submit">{{ busy?'正在保存…':(id?'保存修改':'发布') }}</button>
   </view>
   <view v-else class="empty">
     <text class="section-title">无法编辑这条动态</text>
@@ -52,18 +34,25 @@
 </template>
 <script>
 import PmHeader from '../../components/PmHeader.vue'
-import PmMedia from '../../components/PmMedia.vue'
+import PmAttachmentPicker from '../../components/PmAttachmentPicker.vue'
 import { user, post, validate, savePost } from '../../services/store.js'
 import { topics } from '../../services/seed.js'
-import { persist, cleanup } from '../../services/media.js'
+import { cleanup } from '../../services/media.js'
+import { prepareAttachments } from '../../services/upload.js'
+import { canPublish, publishMoment, transferToServer } from '../../services/development.js'
 import { back, toast, problem } from '../../services/nav.js'
 
 export default {
-  components: { PmHeader, PmMedia },
+  components: { PmHeader, PmAttachmentPicker },
   data() {
-    return { id: '', ready: false, title: '', body: '', tags: [], custom: '', media: [], original: [], busy: false }
+    return { id: '', ready: false, title: '', body: '', tags: [], custom: '', media: [], original: [], busy: false, choosing: false, closed: false, remote: false, remoteMedia: !!transferToServer }
   },
-  onLoad({ id = '' }) {
+  onLoad({ id = '', source = '' }) {
+    if (source === 'server') {
+      this.remote = true
+      this.ready = canPublish()
+      return
+    }
     this.id = id
     const current = user()
     if (!current) return
@@ -78,9 +67,12 @@ export default {
     }
     this.ready = true
   },
+  onUnload() {
+    this.closed = true
+    this.releaseDraft()
+  },
   computed: {
-    choices() { return [...new Set([...topics, ...this.tags])] },
-    canImage() { return this.media.length < 9 && this.media.every(file => file.kind === 'image') }
+    choices() { return [...new Set([...topics, ...this.tags])] }
   },
   methods: {
     returnBack: back,
@@ -95,56 +87,53 @@ export default {
       if (!this.tags.includes(tag)) this.toggle(tag)
       if (this.tags.includes(tag)) this.custom = ''
     },
-    drop(index) { this.media.splice(index, 1) },
-    pickError(error) {
-      if (!String(error?.errMsg || error).toLowerCase().includes('cancel')) problem(error)
+    addMedia(items) { this.media.push(...items) },
+    drop(index) {
+      const [item] = this.media.splice(index, 1)
+      if (item?.prepared && !this.remote) cleanup([item.prepared])
     },
-    pickImages() {
-      if (!this.canImage) return
-      uni.chooseImage({
-        count: 9 - this.media.length,
-        sizeType: ['compressed'],
-        sourceType: ['album', 'camera'],
-        success: result => {
-          const chosen = result.tempFilePaths.slice(0, 9 - this.media.length)
-          this.media.push(...chosen.map(src => ({ kind: 'image', src, fresh: true })))
-        },
-        fail: this.pickError
+    releaseDraft() {
+      if (this.remote) return
+      const paths = this.media.filter(item => item.prepared).map(item => {
+        const src = item.prepared
+        delete item.prepared
+        return src
       })
-    },
-    pickVideo() {
-      uni.chooseVideo({
-        sourceType: ['album', 'camera'],
-        compressed: true,
-        maxDuration: 60,
-        success: result => { this.media = [{ kind: 'video', src: result.tempFilePath, fresh: true }] },
-        fail: this.pickError
-      })
+      return cleanup(paths)
     },
     async submit() {
-      if (this.busy) return
+      if (this.busy || this.choosing || this.closed) return
       this.busy = true
-      const added = []
-      const files = []
       let savedId
       try {
         const draft = { title: this.title, body: this.body, tags: this.tags, media: this.media }
         validate(draft)
-        for (const media of this.media) {
-          const src = media.fresh ? await persist(media.src) : media.src
-          if (media.fresh) added.push(src)
-          files.push({ kind: media.kind, src })
+        const files = await prepareAttachments(this.media, {
+          transfer: this.remote ? transferToServer : undefined,
+          active: () => !this.closed,
+          onState: (i, state) => { this.media[i].state = state },
+          onPrepared: (i, src) => {
+            if (!this.closed) this.media[i].prepared = src
+            else if (!this.remote) cleanup([src])
+          }
+        })
+        if (this.closed) return
+        if (this.remote) {
+          await publishMoment({ ...draft, media: files })
+          if (!this.closed) back()
+          return
         }
         savedId = savePost(this.id, { ...draft, media: files })
+        // Once committed, these references belong to the post, even if navigation fails.
+        for (const item of this.media) delete item.prepared
+        const removed = this.original.filter(old => !files.some(file => file.src === old.src))
+        await cleanup(removed.map(file => file.src))
       } catch (error) {
-        await cleanup(added)
         this.busy = false
-        problem(error)
+        if (!this.closed) problem(error)
         return
       }
-      // 元数据写入成功后才清理旧文件，导航失败也不回滚已发布的媒体。
-      const removed = this.original.filter(old => !files.some(file => file.src === old.src))
-      await cleanup(removed.map(file => file.src))
+      if (this.closed) return
       if (this.id && getCurrentPages().length > 1) back()
       else uni.redirectTo({ url: '/pages/detail/index?id=' + encodeURIComponent(savedId) })
     }

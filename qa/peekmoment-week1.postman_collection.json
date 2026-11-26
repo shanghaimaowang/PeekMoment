@@ -1,0 +1,580 @@
+{
+  "info": {
+    "name": "PeekMoment 第一周 P0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "在独立测试数据库按编号顺序运行。baseUrl 默认为本机地址，请填写实际端口。环境变量 adminUsername、adminPassword、demoToken 对应本次开发服务的配置。运行会创建一条带 QA 前缀的测试动态。"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8080"
+    },
+    {
+      "key": "adminUsername",
+      "value": ""
+    },
+    {
+      "key": "adminPassword",
+      "value": ""
+    },
+    {
+      "key": "demoToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 服务就绪",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "health"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const result = pm.response.json();",
+              "pm.test(\"HTTP 200 / 统一响应\", function () {",
+              "  if (pm.response.code !== 200 || result.code !== 0 || typeof result.message !== \"string\") throw Error(\"状态或响应结构不符合预期\");",
+              "});",
+              "pm.test(\"服务状态正常\", function () { if (!(result.data.status === \"ok\")) throw Error(\"服务状态正常\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 匿名访问管理用户",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "users"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const result = pm.response.json();",
+              "pm.test(\"HTTP 401 / 统一响应\", function () {",
+              "  if (pm.response.code !== 401 || result.code !== 401 || typeof result.message !== \"string\" || result.data !== null) throw Error(\"状态或响应结构不符合预期\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 错误密码登录",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "login"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{quotedUser}}\",\n  \"password\": \"{{badPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.variables.set(\"quotedUser\", JSON.stringify(String(pm.variables.get(\"adminUsername\"))).slice(1, -1));",
+              "pm.variables.set(\"badPassword\", pm.variables.get(\"adminPassword\") === \"qa-invalid\" ? \"qa-incorrect\" : \"qa-invalid\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const result = pm.response.json();",
+              "pm.test(\"HTTP 401 / 统一响应\", function () {",
+              "  if (pm.response.code !== 401 || result.code !== 401 || typeof result.message !== \"string\" || result.data !== null) throw Error(\"状态或响应结构不符合预期\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 管理员登录",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "login"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{quotedUser}}\",\n  \"password\": \"{{quotedPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.variables.set(\"quotedUser\", JSON.stringify(String(pm.variables.get(\"adminUsername\"))).slice(1, -1));",
+              "pm.variables.set(\"quotedPassword\", JSON.stringify(String(pm.variables.get(\"adminPassword\"))).slice(1, -1));",
+              "pm.environment.unset(\"adminToken\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const result = pm.response.json();",
+              "pm.test(\"HTTP 200 / 统一响应\", function () {",
+              "  if (pm.response.code !== 200 || result.code !== 0 || typeof result.message !== \"string\") throw Error(\"状态或响应结构不符合预期\");",
+              "});",
+              "pm.test(\"返回有效会话\", function () { if (!(typeof result.data.token === \"string\" && result.data.token.length > 0 && result.data.expiresAt > Date.now())) throw Error(\"返回有效会话\"); });",
+              "if (pm.response.code === 200 && result.data && result.data.token) pm.environment.set(\"adminToken\", result.data.token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 用户分页查询",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/users?page=1&pageSize=1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const result = pm.response.json();",
+              "pm.test(\"HTTP 200 / 统一响应\", function () {",
+              "  if (pm.response.code !== 200 || result.code !== 0 || typeof result.message !== \"string\") throw Error(\"状态或响应结构不符合预期\");",
+              "});",
+              "pm.test(\"分页生效\", function () { if (!(result.data.page === 1 && result.data.pageSize === 1 && result.data.items.length === 1 && result.data.total >= 1)) throw Error(\"分页生效\"); });",
+              "pm.test(\"只返回用户展示字段\", function () { if (!(result.data.items.every(u => u.id && u.nickname && !(\"password\" in u) && !(\"passwordHash\" in u)))) throw Error(\"只返回用户展示字段\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 匿名发布",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/moments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "moments"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"body\": \"匿名发布测试\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const result = pm.response.json();",
+              "pm.test(\"HTTP 401 / 统一响应\", function () {",
+              "  if (pm.response.code !== 401 || result.code !== 401 || typeof result.message !== \"string\" || result.data !== null) throw Error(\"状态或响应结构不符合预期\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 已登录时发布空内容",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{demoToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/moments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "moments"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"body\": \"  \",\n  \"tags\": []\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const result = pm.response.json();",
+              "pm.test(\"HTTP 400 / 统一响应\", function () {",
+              "  if (pm.response.code !== 400 || result.code !== 400 || typeof result.message !== \"string\" || result.data !== null) throw Error(\"状态或响应结构不符合预期\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 发布带标签的动态",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{demoToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/moments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "moments"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"{{qaTitle}}\",\n  \"body\": \"第一周接口回归\",\n  \"tags\": [\n    \"校园\",\n    \"测试\",\n    \" 校园 \"\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.environment.unset(\"momentId\");",
+              "pm.environment.set(\"qaTitle\", \"QA-\" + Date.now() + \"-\" + Math.random().toString(36).slice(2, 8));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const result = pm.response.json();",
+              "pm.test(\"HTTP 201 / 统一响应\", function () {",
+              "  if (pm.response.code !== 201 || result.code !== 0 || typeof result.message !== \"string\") throw Error(\"状态或响应结构不符合预期\");",
+              "});",
+              "pm.test(\"返回新动态\", function () { if (!(typeof result.data.id === \"string\" && result.data.title === pm.variables.get(\"qaTitle\") && result.data.status === \"published\")) throw Error(\"返回新动态\"); });",
+              "pm.test(\"服务端分配用户\", function () { if (!(result.data.userId === \"demo-xiaoman\")) throw Error(\"服务端分配用户\"); });",
+              "pm.test(\"标签去重并维持顺序\", function () { if (!(JSON.stringify(result.data.tags) === JSON.stringify([\"校园\",\"测试\"]))) throw Error(\"标签去重并维持顺序\"); });",
+              "if (pm.response.code === 201 && result.data && result.data.id) pm.environment.set(\"momentId\", result.data.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 广场回读动态",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/moments?page=1&pageSize=100",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "moments"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "100"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const result = pm.response.json();",
+              "pm.test(\"HTTP 200 / 统一响应\", function () {",
+              "  if (pm.response.code !== 200 || result.code !== 0 || typeof result.message !== \"string\") throw Error(\"状态或响应结构不符合预期\");",
+              "});",
+              "pm.test(\"广场包含刚发布的动态\", function () { if (!(result.data.items.some(m => m.id === pm.variables.get(\"momentId\") && m.title === pm.variables.get(\"qaTitle\")))) throw Error(\"广场包含刚发布的动态\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 管理端按标题查动态",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/moments?page=1&pageSize=5&keyword={{qaTitle}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "moments"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "pageSize",
+              "value": "5"
+            },
+            {
+              "key": "keyword",
+              "value": "{{qaTitle}}"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const result = pm.response.json();",
+              "pm.test(\"HTTP 200 / 统一响应\", function () {",
+              "  if (pm.response.code !== 200 || result.code !== 0 || typeof result.message !== \"string\") throw Error(\"状态或响应结构不符合预期\");",
+              "});",
+              "pm.test(\"新动态可以检索\", function () { if (!(result.data.total === 1 && result.data.items[0].id === pm.variables.get(\"momentId\"))) throw Error(\"新动态可以检索\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 发布身份无权管理内容",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{demoToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/moments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "moments"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const result = pm.response.json();",
+              "pm.test(\"HTTP 401 / 统一响应\", function () {",
+              "  if (pm.response.code !== 401 || result.code !== 401 || typeof result.message !== \"string\" || result.data !== null) throw Error(\"状态或响应结构不符合预期\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 非法页码",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/moments?page=0",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "moments"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "0"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const result = pm.response.json();",
+              "pm.test(\"HTTP 400 / 统一响应\", function () {",
+              "  if (pm.response.code !== 400 || result.code !== 400 || typeof result.message !== \"string\" || result.data !== null) throw Error(\"状态或响应结构不符合预期\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
