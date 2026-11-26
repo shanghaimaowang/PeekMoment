@@ -1,0 +1,51 @@
+{
+  "pages": [
+    {
+      "path": "pages/feed/index",
+      "style": {
+        "navigationBarTitleText": "片刻广场",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/detail/index",
+      "style": {
+        "navigationBarTitleText": "动态详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/compose/index",
+      "style": {
+        "navigationBarTitleText": "发布片刻",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的片刻",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/login/index",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/search/index",
+      "style": {
+        "navigationBarTitleText": "搜索片刻",
+        "navigationStyle": "custom"
+      }
+    }
+  ],
+  "globalStyle": {
+    "backgroundColor": "#f8f8f4",
+    "navigationBarTextStyle": "black",
+    "navigationBarBackgroundColor": "#f8f8f4"
+  }
+}
