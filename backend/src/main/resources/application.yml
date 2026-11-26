@@ -1,0 +1,38 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: peekmoment-backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/peekmoment?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: "123456" # 本机 MySQL 密码，按需修改
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 200MB
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+peekmoment:
+  jwt:
+    # HS256 密钥，长度需 >= 32 字节；生产环境务必更换
+    secret: peekmoment-dev-secret-key-change-in-prod
+    # token 有效期（分钟），默认 12 小时
+    expire-minutes: 720
+  upload:
+    # 上传文件根目录（相对工程运行目录）
+    dir: ./uploads
+
+logging:
+  level:
+    com.peekmoment: debug
