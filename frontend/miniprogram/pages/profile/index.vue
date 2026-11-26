@@ -42,6 +42,7 @@
         <button class="link" @click="compose">发布第一条片刻</button>
       </view>
     </view>
+    <button v-if="development" class="secondary wide" @click="openServer">联调广场</button>
   </view>
   <pm-nav current="profile"/>
 </view>
@@ -51,10 +52,11 @@ import PmHeader from '../../components/PmHeader.vue'
 import PmAvatar from '../../components/PmAvatar.vue'
 import PmCard from '../../components/PmCard.vue'
 import PmNav from '../../components/PmNav.vue'
+import { apiOrigin } from '../../services/development.js'
 import {user,list,logout} from '../../services/store.js'
 import {open,confirmAction,problem} from '../../services/nav.js'
-export default {components:{PmHeader,PmAvatar,PmCard,PmNav},data(){return {me:null,mine:[]}},onShow(){this.refresh()},
+export default {components:{PmHeader,PmAvatar,PmCard,PmNav},data(){return {me:null,mine:[],development:!!apiOrigin}},onShow(){this.refresh()},
  computed:{commentCount(){return this.mine.reduce((n,p)=>n+p.comments.length,0)},voteCount(){return this.mine.reduce((n,p)=>n+Object.keys(p.ratings).length,0)}},
- methods:{refresh(){this.me=user();this.mine=list({mine:true})},enter(){open('login')},compose(){open('compose')},async leave(){if(await confirmAction('退出登录？','你发布的动态会保留在这台设备上。')){try{logout();this.refresh()}catch(e){problem(e)}}}}
+ methods:{openServer(){open('server')},refresh(){this.me=user();this.mine=list({mine:true})},enter(){open('login')},compose(){open('compose')},async leave(){if(await confirmAction('退出登录？','你发布的动态会保留在这台设备上。')){try{logout();this.refresh()}catch(e){problem(e)}}}}
 }
 </script>

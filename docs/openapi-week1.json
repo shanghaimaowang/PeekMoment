@@ -1,0 +1,1146 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "PeekMoment 第一周接口",
+    "version": "1.0.0",
+    "description": "普通用户的联调发布凭证与管理员会话分别使用。分页从 1 开始。Mock 和 Spring 服务分别运行，数据独立。"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8080",
+      "description": "Spring Boot 开发服务"
+    },
+    {
+      "url": "http://127.0.0.1:3100",
+      "description": "独立联调 Mock，仅供本地开发"
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "数据库健康检查",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        0
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Health"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "ok",
+                  "data": {
+                    "status": "ok"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务异常",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        500
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string",
+                      "nullable": true,
+                      "enum": [
+                        null
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 500,
+                  "message": "服务异常",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/moments": {
+      "get": {
+        "operationId": "listMoments",
+        "summary": "按发布时间倒序读取公开动态",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        0
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MomentPage"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "ok",
+                  "data": {
+                    "items": [
+                      {
+                        "id": "1",
+                        "userId": "demo-xiaoman",
+                        "author": "小满",
+                        "title": "图书馆门口",
+                        "body": "雨停了。",
+                        "tags": [
+                          "校园"
+                        ],
+                        "media": [],
+                        "createdAt": 1795680000000,
+                        "status": "published",
+                        "ratings": {},
+                        "comments": []
+                      }
+                    ],
+                    "page": 1,
+                    "pageSize": 10,
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "分页参数无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        400
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string",
+                      "nullable": true,
+                      "enum": [
+                        null
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 400,
+                  "message": "分页参数无效",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "publishMoment",
+        "summary": "以联调用户发布动态",
+        "security": [
+          {
+            "DemoPublisher": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Draft"
+              },
+              "example": {
+                "title": "图书馆门口",
+                "body": "雨停了。",
+                "tags": [
+                  "校园"
+                ],
+                "media": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "发布成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        0
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Moment"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "ok",
+                  "data": {
+                    "id": "1",
+                    "userId": "demo-xiaoman",
+                    "author": "小满",
+                    "title": "图书馆门口",
+                    "body": "雨停了。",
+                    "tags": [
+                      "校园"
+                    ],
+                    "media": [],
+                    "createdAt": 1795680000000,
+                    "status": "published",
+                    "ratings": {},
+                    "comments": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "动态字段无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        400
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string",
+                      "nullable": true,
+                      "enum": [
+                        null
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 400,
+                  "message": "动态字段无效",
+                  "data": null
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "发布身份无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        401
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string",
+                      "nullable": true,
+                      "enum": [
+                        null
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 401,
+                  "message": "发布身份无效",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/login": {
+      "post": {
+        "operationId": "adminLogin",
+        "summary": "管理员账号登录，创建两小时会话",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              },
+              "example": {
+                "username": "mock-admin",
+                "password": "mock-password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        0
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminSession"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "ok",
+                  "data": {
+                    "token": "example-admin-session",
+                    "expiresAt": 1795687200000,
+                    "username": "mock-admin"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "登录参数无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        400
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string",
+                      "nullable": true,
+                      "enum": [
+                        null
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 400,
+                  "message": "登录参数无效",
+                  "data": null
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "账号或密码错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        401
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string",
+                      "nullable": true,
+                      "enum": [
+                        null
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 401,
+                  "message": "账号或密码错误",
+                  "data": null
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "管理员账号未配置",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        503
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string",
+                      "nullable": true,
+                      "enum": [
+                        null
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 503,
+                  "message": "管理员账号未配置",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "operationId": "listAdminUsers",
+        "summary": "按用户 ID 或昵称查询",
+        "security": [
+          {
+            "AdminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "$ref": "#/components/parameters/Keyword"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        0
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/UserPage"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "ok",
+                  "data": {
+                    "items": [
+                      {
+                        "id": "demo-xiaoman",
+                        "nickname": "小满",
+                        "createdAt": 1795680000000
+                      }
+                    ],
+                    "page": 1,
+                    "pageSize": 10,
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "分页参数无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        400
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string",
+                      "nullable": true,
+                      "enum": [
+                        null
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 400,
+                  "message": "分页参数无效",
+                  "data": null
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "管理员会话无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        401
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string",
+                      "nullable": true,
+                      "enum": [
+                        null
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 401,
+                  "message": "管理员会话无效",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/moments": {
+      "get": {
+        "operationId": "listAdminMoments",
+        "summary": "按动态 ID、标题、正文或作者昵称查询全部状态",
+        "security": [
+          {
+            "AdminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "$ref": "#/components/parameters/Keyword"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        0
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MomentPage"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "ok",
+                  "data": {
+                    "items": [
+                      {
+                        "id": "1",
+                        "userId": "demo-xiaoman",
+                        "author": "小满",
+                        "title": "图书馆门口",
+                        "body": "雨停了。",
+                        "tags": [
+                          "校园"
+                        ],
+                        "media": [],
+                        "createdAt": 1795680000000,
+                        "status": "published",
+                        "ratings": {},
+                        "comments": []
+                      }
+                    ],
+                    "page": 1,
+                    "pageSize": 10,
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "分页参数无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        400
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string",
+                      "nullable": true,
+                      "enum": [
+                        null
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 400,
+                  "message": "分页参数无效",
+                  "data": null
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "管理员会话无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "enum": [
+                        401
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string",
+                      "nullable": true,
+                      "enum": [
+                        null
+                      ]
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                },
+                "example": {
+                  "code": 401,
+                  "message": "管理员会话无效",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "DemoPublisher": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "开发者配置的演示用户令牌；仅在显式启用演示身份的环境生效。"
+      },
+      "AdminSession": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "登录接口返回的管理员令牌。"
+      }
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "default": 1
+        },
+        "description": "页码，从 1 开始"
+      },
+      "PageSize": {
+        "name": "pageSize",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 10
+        },
+        "description": "每页条数"
+      },
+      "Keyword": {
+        "name": "keyword",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "可选，忽略大小写的字面子串，不解释 SQL 通配符。"
+      }
+    },
+    "schemas": {
+      "Health": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "Media": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "image",
+              "video"
+            ]
+          },
+          "src": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "description": "HTTP(S) 媒体地址，或 /uploads/ 下的文件路径。客户端临时路径须先上传。"
+          }
+        },
+        "required": [
+          "kind",
+          "src"
+        ]
+      },
+      "Draft": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 12
+            },
+            "maxItems": 5
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Media"
+            },
+            "maxItems": 9
+          }
+        },
+        "additionalProperties": false,
+        "description": "标题、正文去除首尾空白后与附件至少有一项有内容。标签去空白并按首次出现顺序去重。附件最多九张图片或单个视频。长度按客户端 UTF-16 计数。"
+      },
+      "Moment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Media"
+            }
+          },
+          "createdAt": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix 毫秒时间戳"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "published",
+              "pending",
+              "hidden"
+            ]
+          },
+          "ratings": {
+            "type": "object",
+            "description": "第一周占位，返回空对象。"
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "第一周占位，返回空数组。"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "author",
+          "title",
+          "body",
+          "tags",
+          "media",
+          "createdAt",
+          "status",
+          "ratings",
+          "comments"
+        ]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix 毫秒时间戳"
+          }
+        },
+        "required": [
+          "id",
+          "nickname",
+          "createdAt"
+        ]
+      },
+      "MomentPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Moment"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "format": "int64"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ]
+      },
+      "UserPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "format": "int64"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ]
+      },
+      "Login": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      },
+      "AdminSession": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix 毫秒时间戳"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "expiresAt",
+          "username"
+        ]
+      }
+    }
+  }
+}

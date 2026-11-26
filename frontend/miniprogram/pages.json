@@ -36,6 +36,13 @@
       }
     },
     {
+      "path": "pages/server/index",
+      "style": {
+        "navigationBarTitleText": "联调广场",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/search/index",
       "style": {
         "navigationBarTitleText": "搜索片刻",
