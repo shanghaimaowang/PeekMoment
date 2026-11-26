@@ -38,6 +38,17 @@ public class MpContentController {
         return Result.ok(contentService.timeline(page, Math.min(size, 50), viewerId));
     }
 
+    @GetMapping("/search")
+    public Result<PageVO<ContentVO>> search(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String tag,
+            @RequestParam(required = false) String date,
+            @RequestParam(defaultValue = "1") long page,
+            @RequestParam(defaultValue = "10") long size) {
+        return Result.ok(contentService.search(keyword, tag, date,
+                page, Math.min(size, 50), UserContext.currentUserId()));
+    }
+
     @GetMapping("/{id}")
     public Result<ContentVO> detail(@PathVariable Long id) {
         return Result.ok(contentService.detail(id, UserContext.currentUserId()));

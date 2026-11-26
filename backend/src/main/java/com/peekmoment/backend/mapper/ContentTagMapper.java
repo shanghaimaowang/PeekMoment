@@ -27,4 +27,7 @@ public interface ContentTagMapper {
             + "<foreach item='id' collection='ids' open='(' separator=',' close=')'>#{id}</foreach>"
             + "</script>")
     List<ContentTagRow> selectTagsByContentIds(@Param("ids") List<Long> ids);
+
+    @Select("SELECT content_id FROM content_tag WHERE tag_id = #{tagId}")
+    List<Long> selectByTagId(@Param("tagId") Long tagId);
 }

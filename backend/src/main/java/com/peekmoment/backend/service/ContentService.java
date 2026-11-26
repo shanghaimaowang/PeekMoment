@@ -1,8 +1,10 @@
 package com.peekmoment.backend.service;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -109,6 +111,43 @@ public class ContentService {
             throw new BusinessException(ResultCode.NOT_FOUND, "动态不存在");
         }
         return buildVOs(List.of(content), viewerId).get(0);
+    }
+
+    /** 检索：关键词（标题/正文）、精确标签、日期，可组合 */
+    public PageVO<ContentVO> search(String keyword, String tag, String date,
+            long page, long size, Long viewerId) {
+        LambdaQueryWrapper<Content> wrapper = new LambdaQueryWrapper<Content>()
+                .eq(Content::getStatus, Content.STATUS_PUBLISHED);
+
+        if (keyword != null && !keyword.isBlank()) {
+            wrapper.and(w -> w.like(Content::getTitle, keyword)
+                    .or().like(Content::getBody, keyword));
+        }
+        if (tag != null && !tag.isBlank()) {
+            Tag t = tagMapper.selectOne(new LambdaQueryWrapper<Tag>()
+                    .eq(Tag::getName, tag.trim()));
+            if (t == null) {
+                return new PageVO<>(List.of(), 0, page, size);
+            }
+            List<Long> ids = contentTagMapper.selectByTagId(t.getId());
+            if (ids.isEmpty()) {
+                return new PageVO<>(List.of(), 0, page, size);
+            }
+            wrapper.in(Content::getId, ids);
+        }
+        if (date != null && !date.isBlank()) {
+            try {
+                LocalDate d = LocalDate.parse(date);
+                wrapper.between(Content::getCreatedAt,
+                        d.atStartOfDay(), d.atTime(LocalTime.MAX));
+            } catch (DateTimeParseException e) {
+                throw new BusinessException(ResultCode.PARAM_ERROR, "日期格式应为 yyyy-MM-dd");
+            }
+        }
+        wrapper.orderByDesc(Content::getCreatedAt);
+        Page<Content> result = contentMapper.selectPage(new Page<>(page, size), wrapper);
+        List<ContentVO> vos = buildVOs(result.getRecords(), viewerId);
+        return new PageVO<>(vos, result.getTotal(), result.getCurrent(), result.getSize());
     }
 
     private Content requireOwned(Long userId, Long contentId) {

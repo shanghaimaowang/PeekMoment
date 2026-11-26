@@ -1,9 +1,11 @@
 package com.peekmoment.backend.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.peekmoment.backend.auth.AuthInterceptor;
@@ -17,6 +19,9 @@ import com.peekmoment.backend.auth.AuthInterceptor;
 public class WebConfig implements WebMvcConfigurer {
 
     private final AuthInterceptor authInterceptor;
+
+    @Value("${peekmoment.upload.dir}")
+    private String uploadDir;
 
     public WebConfig(AuthInterceptor authInterceptor) {
         this.authInterceptor = authInterceptor;
@@ -36,5 +41,12 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" +
+                        java.nio.file.Paths.get(uploadDir).toAbsolutePath().normalize() + "/");
     }
 }
