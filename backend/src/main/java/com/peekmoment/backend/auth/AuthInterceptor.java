@@ -26,11 +26,17 @@ import com.peekmoment.backend.common.ResultCode;
 @RequiredArgsConstructor
 public class AuthInterceptor implements HandlerInterceptor {
 
-    /** 游客可访问的接口（method + path 前缀） */
+    /** 公开接口（不限请求方法）：登录注册与健康检查 */
+    private static final List<String> PUBLIC_PREFIXES = List.of(
+            "/api/mp/auth/login",
+            "/api/mp/auth/register",
+            "/api/admin/auth/login",
+            "/api/health");
+
+    /** 游客可访问的浏览接口（仅 GET） */
     private static final List<String> PUBLIC_GET_PREFIXES = List.of(
             "/api/mp/contents",
-            "/api/mp/search",
-            "/api/health");
+            "/api/mp/search");
 
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
@@ -41,7 +47,8 @@ public class AuthInterceptor implements HandlerInterceptor {
         String path = request.getRequestURI();
         String method = request.getMethod();
 
-        if (HttpMethod.GET.matches(method) && isPublic(path)) {
+        if (isPublic(path)
+                || (HttpMethod.GET.matches(method) && isPublicGet(path))) {
             return true;
         }
 
@@ -70,6 +77,10 @@ public class AuthInterceptor implements HandlerInterceptor {
     }
 
     private boolean isPublic(String path) {
+        return PUBLIC_PREFIXES.stream().anyMatch(path::startsWith);
+    }
+
+    private boolean isPublicGet(String path) {
         return PUBLIC_GET_PREFIXES.stream().anyMatch(path::startsWith);
     }
 
