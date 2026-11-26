@@ -14,7 +14,7 @@ public record ContentVO(
         String body,
         List<String> tags,
         List<MediaVO> media,
-        Long createdAt,
+        long createdAt,
         Double ratingAvg,
         Integer ratingCount,
         Integer commentCount,

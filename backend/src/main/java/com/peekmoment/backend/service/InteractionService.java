@@ -94,10 +94,12 @@ public class InteractionService {
         commentMapper.insert(comment);
         commentMapper.incrCommentCount(contentId);
 
+        // 回读获取数据库生成的时间
+        Comment saved = commentMapper.selectById(comment.getId());
         User author = userMapper.selectById(userId);
-        return new CommentVO(comment.getId(), userId,
+        return new CommentVO(saved.getId(), userId,
                 author == null ? "未知用户" : author.getNickname(),
-                comment.getBody(), TimeUtil.toMillis(comment.getCreatedAt()), List.of());
+                saved.getBody(), TimeUtil.toMillis(saved.getCreatedAt()), List.of());
     }
 
     private void requirePublished(Long contentId) {
