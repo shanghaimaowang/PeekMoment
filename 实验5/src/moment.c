@@ -26,6 +26,9 @@ int moment_total_likes(const Moment *items, int count)
     int i;
 
     for (i = 0; i < count; i++) {
+        if (items[i].likes <= 0) {
+            continue;
+        }
         total += (items[i].likes > 100) ? 100 : items[i].likes;
     }
     return total;
