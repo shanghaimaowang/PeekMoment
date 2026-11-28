@@ -1,0 +1,5 @@
+campus 12
+library 35
+canteen 8
+playground 21
+dormitory 17
