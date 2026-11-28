@@ -25,8 +25,11 @@ int moment_total_likes(const Moment *items, int count)
     int total = 0;
     int i;
 
+    /* 单条动态点赞数超过 100 时按 100 计，避免异常数据放大总数 */
     for (i = 0; i < count; i++) {
-        total += (items[i].likes > 100) ? 100 : items[i].likes;
+        int likes = items[i].likes;
+
+        total += (likes > 100) ? 100 : likes;
     }
     return total;
 }
