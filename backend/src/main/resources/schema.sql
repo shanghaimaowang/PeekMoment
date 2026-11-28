@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS users (
+    id VARCHAR(64) PRIMARY KEY,
+    nickname VARCHAR(80) NOT NULL,
+    created_at BIGINT NOT NULL
+);
