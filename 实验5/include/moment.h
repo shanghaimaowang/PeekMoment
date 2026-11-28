@@ -12,5 +12,6 @@ typedef struct {
 int moment_load(const char *path, Moment *items, int capacity);
 int moment_total_likes(const Moment *items, int count);
 int moment_peak_likes(const Moment *items, int count);
+double moment_average_likes(const Moment *items, int count);
 
 #endif

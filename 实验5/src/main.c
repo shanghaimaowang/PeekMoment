@@ -22,5 +22,6 @@ int main(int argc, char *argv[])
     printf("moments      : %d\n", count);
     printf("total likes  : %d\n", moment_total_likes(items, count));
     printf("peak likes   : %d\n", moment_peak_likes(items, count));
+    printf("average likes: %.2f\n", moment_average_likes(items, count));
     return 0;
 }
