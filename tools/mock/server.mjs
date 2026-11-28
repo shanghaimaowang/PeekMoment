@@ -2,9 +2,9 @@ import { createServer } from 'node:http'
 import { randomUUID } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
-import { validate } from '../frontend/miniprogram/services/store.js'
+import { validate } from '../../frontend/miniprogram/src/services/store.js'
 
-const contract = JSON.parse(readFileSync(new URL('../docs/openapi-week1.json', import.meta.url), 'utf8'))
+const contract = JSON.parse(readFileSync(new URL('../../docs/openapi-week1.json', import.meta.url), 'utf8'))
 const example = (path, verb, status = 200) =>
   contract.paths[path][verb].responses[status].content['application/json'].example.data
 

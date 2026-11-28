@@ -2,15 +2,32 @@
 
 PeekMoment 是一个校园动态分享项目。小程序支持发布和浏览图文、视频，管理服务向后台提供用户与内容查询。
 
+## 项目结构
+
+```text
+PeekMoment/
+├── backend/                  # Spring Boot 3 + MyBatis-Plus 后端（Maven 标准目录）
+├── frontend/
+│   ├── admin_web/            # Vue 3 + Element Plus 管理后台
+│   └── miniprogram/          # uni-app + Vue 3 小程序（CLI 标准目录）
+│       ├── src/              # 应用源码：pages、components、services、static 等
+│       └── tests/            # Node.js 单元测试
+├── docs/                     # 接口契约、设计说明与周报
+├── tools/
+│   ├── mock/                 # 本地 HTTP Mock 服务
+│   └── qa/                   # Postman 集合、编译检查等验证脚本
+└── .github/workflows/        # CI 检查
+```
+
 ## 先跑一次第一周的接口
 
 从仓库根目录执行以下命令即可启动本地 Mock。需要 Node.js 22.13 或更高版本，无需安装 npm 依赖。
 
 ```sh
-node mock/server.mjs
+node tools/mock/server.mjs
 ```
 
-打开 `http://127.0.0.1:3100/api/moments` 可以看到一条示例动态。用 Apifox 导入 `qa/peekmoment-week1.postman_collection.json`，按下表设置私有环境变量，再按集合顺序运行。集合会登录管理员、发布一条带标签的测试动态，并分别从公开列表和管理接口核对这条记录。
+打开 `http://127.0.0.1:3100/api/moments` 可以看到一条示例动态。用 Apifox 导入 `tools/qa/peekmoment-week1.postman_collection.json`，按下表设置私有环境变量，再按集合顺序运行。集合会登录管理员、发布一条带标签的测试动态，并分别从公开列表和管理接口核对这条记录。
 
 | 变量 | 本地 Mock 的值 |
 | --- | --- |
@@ -35,7 +52,7 @@ Mock 固定监听本机，重启后重置数据。Spring 服务默认使用 8080
 完整字段、分页与失败响应见 [OpenAPI 契约](docs/openapi-week1.json)。测试从仓库根目录运行。
 
 ```sh
-node --test frontend/miniprogram/tests/*.test.mjs mock/server.test.mjs qa/collection.test.mjs
+node --test frontend/miniprogram/tests/*.test.mjs tools/mock/server.test.mjs tools/qa/collection.test.mjs
 mvn -f backend/pom.xml verify
 ```
 

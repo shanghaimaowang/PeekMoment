@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 
 process.env.NODE_ENV = 'development'
 const { apiOrigin, listMoments, publishMoment, setPublisherToken, canPublish } =
-  await import('../services/development.js')
+  await import('../src/services/development.js')
 
 test('development timeline uses server pagination and resolves relative media references', async () => {
   globalThis.uni = { request(options) {

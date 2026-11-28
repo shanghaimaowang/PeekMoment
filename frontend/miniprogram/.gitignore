@@ -1,2 +1,4 @@
 unpackage/
+dist/
 .hbuilderx/
+node_modules/

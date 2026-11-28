@@ -38,4 +38,4 @@ mvn -f backend/pom.xml spring-boot:run
 
 ## 回归测试
 
-在仓库根目录执行 `mvn -f backend/pom.xml test`。JUnit 使用独立的内存 H2 数据库，并在随机端口访问实际 HTTP 接口。Apifox 可导入 `qa/peekmoment-week1.postman_collection.json` 复核同一组业务路径。
+在仓库根目录执行 `mvn -f backend/pom.xml test`。JUnit 使用独立的内存 H2 数据库，并在随机端口访问实际 HTTP 接口。Apifox 可导入 `tools/qa/peekmoment-week1.postman_collection.json` 复核同一组业务路径。

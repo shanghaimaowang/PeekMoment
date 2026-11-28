@@ -8,7 +8,7 @@ test('小程序联调客户端通过 HTTP Mock 发布并重新分页读取动态
   process.env.NODE_ENV = 'development'
   let client
   try {
-    client = await import('../frontend/miniprogram/services/development.js')
+    client = await import('../../frontend/miniprogram/src/services/development.js')
   } finally {
     if (previousMode === undefined) delete process.env.NODE_ENV
     else process.env.NODE_ENV = previousMode

@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test frontend/miniprogram/tests/*.test.mjs mock/server.test.mjs qa/collection.test.mjs
+      - run: node --test frontend/miniprogram/tests/*.test.mjs tools/mock/server.test.mjs tools/qa/collection.test.mjs
 
   miniprogram-weixin:
     runs-on: ubuntu-latest
@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: 22
       - name: Compile the WeChat mini program and check generated pages
-        run: node qa/compile-weixin.mjs
+        run: node tools/qa/compile-weixin.mjs
 
   backend-h2:
     runs-on: ubuntu-latest

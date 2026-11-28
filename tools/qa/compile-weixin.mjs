@@ -26,7 +26,7 @@ const buildProject = {
   }
 }
 
-const source = fileURLToPath(new URL('../frontend/miniprogram/', import.meta.url))
+const source = fileURLToPath(new URL('../../frontend/miniprogram/', import.meta.url))
 const directory = mkdtempSync(join(tmpdir(), 'peekmoment-weixin-'))
 function npm(args) {
   // Windows installs npm.cmd. Only fixed arguments below are passed to cmd.
@@ -45,10 +45,11 @@ try {
     'export default defineConfig({ plugins: [uni()] })'
   ].join('\n'))
   const src = join(directory, 'src')
+  const appSource = join(source, 'src')
   mkdirSync(src)
   cpSync(join(source, 'index.html'), join(directory, 'index.html'))
-  for (const entry of ['App.vue','main.js','manifest.json','pages.json','components','pages','services','static']) {
-    cpSync(join(source, entry), join(src, entry), {recursive: true})
+  for (const entry of ['App.vue','main.js','manifest.json','pages.json','uni.scss','components','pages','services','static']) {
+    cpSync(join(appSource, entry), join(src, entry), {recursive: true})
   }
   // Resolve nested semver ranges against the same publication cutoff on each run.
   npm(['install','--before=2025-12-01T00:00:00Z','--no-audit','--no-fund'])

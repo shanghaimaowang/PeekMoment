@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { createFileTransfer, prepareAttachments } from '../services/upload.js'
+import { createFileTransfer, prepareAttachments } from '../src/services/upload.js'
 
 const fresh = (src, kind = 'image') => ({ kind, src, fresh: true })
 const intercept = () => {

@@ -1,6 +1,8 @@
 {
-  "name": "uni-preset-vue",
+  "name": "peekmoment-miniprogram",
   "version": "0.0.0",
+  "private": true,
+  "description": "PeekMoment 校园动态分享小程序",
   "scripts": {
     "dev:custom": "uni -p",
     "dev:h5": "uni",
