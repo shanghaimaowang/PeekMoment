@@ -12,6 +12,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    printf("PeekMoment 动态统计\n");
+    printf("===================\n");
     printf("moments      : %d\n", count);
     printf("total likes  : %d\n", moment_total_likes(items, count));
     printf("peak likes   : %d\n", moment_peak_likes(items, count));
