@@ -12,6 +12,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    if (count == 0) {
+        fprintf(stderr, "no moments found in %s\n", path);
+        return 2;
+    }
+
     printf("PeekMoment 动态统计\n");
     printf("===================\n");
     printf("moments      : %d\n", count);
