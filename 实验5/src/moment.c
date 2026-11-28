@@ -43,3 +43,11 @@ int moment_peak_likes(const Moment *items, int count)
     }
     return peak;
 }
+
+double moment_average_likes(const Moment *items, int count)
+{
+    if (count <= 0) {
+        return 0.0;
+    }
+    return (double)moment_total_likes(items, count) / count;
+}
